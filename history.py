@@ -13,7 +13,6 @@ def _table_has_user_id(cur) -> bool:
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
-    # Create table if it doesn't exist
     cur.execute("""
         CREATE TABLE IF NOT EXISTS qa_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,9 +28,7 @@ def init_db():
 def log_qa(question: str, answer: str, user_id: Optional[str] = None):
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
-    # ensure schema (in case old db created without user_id)
     if not _table_has_user_id(cur):
-        # Add column if missing
         cur.execute("ALTER TABLE qa_history ADD COLUMN user_id TEXT")
     cur.execute(
         "INSERT INTO qa_history (timestamp, user_id, question, answer) VALUES (?, ?, ?, ?)",
@@ -40,24 +37,22 @@ def log_qa(question: str, answer: str, user_id: Optional[str] = None):
     conn.commit()
     conn.close()
 
-def get_all_history(limit: int = None):
+def get_all_history(user_id: Optional[str] = None, limit: Optional[int] = None) -> List[Tuple[str, str, str, str]]:
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
-    base = "SELECT timestamp, user_id, question, answer FROM qa_history ORDER BY id DESC"
-    if limit:
-        base += f" LIMIT {int(limit)}"
-    cur.execute(base)
-    rows = cur.fetchall()
-    conn.close()
-    return rows
 
-def get_user_history(user_id: str, limit: int = None):
-    conn = sqlite3.connect(DB_FILE)
-    cur = conn.cursor()
-    base = "SELECT timestamp, user_id, question, answer FROM qa_history WHERE user_id = ? ORDER BY id DESC"
+    base = "SELECT timestamp, user_id, question, answer FROM qa_history"
+    params = []
+
+    if user_id:
+        base += " WHERE user_id = ?"
+        params.append(user_id)
+
+    base += " ORDER BY id DESC"
     if limit:
         base += f" LIMIT {int(limit)}"
-    cur.execute(base, (user_id,))
+
+    cur.execute(base, params)
     rows = cur.fetchall()
     conn.close()
     return rows

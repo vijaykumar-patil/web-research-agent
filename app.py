@@ -11,7 +11,7 @@ user_info = login_button(
     domain=st.secrets["AUTH0_DOMAIN"],
     key="auth0_login"
     )
-st.write("DEBUG — user_info:", user_info)
+#st.write("DEBUG — user_info:", user_info)
 
 
 if user_info:
@@ -40,7 +40,7 @@ if user_info:
 
     st.markdown("---")
     st.subheader("📜 Your Past Q&A History")
-    history = get_all_history(user_id=user_id)
+    history = get_all_history(user_id)
     if history:
         for timestamp, q, a in history:
             with st.expander(f"🔎 {q} ({timestamp})"):
