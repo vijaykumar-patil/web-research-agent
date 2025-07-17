@@ -1,10 +1,12 @@
 import os
+import csv
+from datetime import datetime
 from dotenv import load_dotenv
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import Tool, initialize_agent
 
-# Load API keys
+# Load API keys from .env
 load_dotenv()
 
 def create_agent(verbose: bool = False):
@@ -35,3 +37,18 @@ def create_agent(verbose: bool = False):
     )
 
     return agent
+
+# ✅ Q&A Logging
+def log_to_csv(question, answer, log_file="qa_history.csv"):
+    file_exists = os.path.exists(log_file)
+    with open(log_file, mode="a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(["timestamp", "question", "answer"])
+        writer.writerow([datetime.now().isoformat(), question, answer])
+
+# ✅ Run agent + log Q&A
+def run_with_logging(agent, question: str) -> str:
+    answer = agent.run(question)
+    log_to_csv(question, answer)
+    return answer
