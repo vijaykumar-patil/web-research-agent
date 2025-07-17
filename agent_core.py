@@ -1,4 +1,5 @@
 # agent_core.py
+
 import os
 import csv
 import re
@@ -8,9 +9,10 @@ from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import Tool, initialize_agent
 
-# Load API keys from .env
+# Load environment variables
 load_dotenv()
 
+# ✅ Create the LangChain agent
 def create_agent(verbose: bool = False):
     llm = ChatGoogleGenerativeAI(
         model="gemini-1.5-flash",
@@ -37,6 +39,7 @@ def create_agent(verbose: bool = False):
 
     return agent
 
+# ✅ Log Q&A to CSV (optional, for local debugging)
 def log_to_csv(question, answer, log_file="qa_history.csv"):
     file_exists = os.path.exists(log_file)
     with open(log_file, mode="a", newline="", encoding="utf-8") as f:
@@ -45,19 +48,20 @@ def log_to_csv(question, answer, log_file="qa_history.csv"):
             writer.writerow(["timestamp", "question", "answer"])
         writer.writerow([datetime.now().isoformat(), question, answer])
 
+# ✅ Extract URLs from text (basic pattern)
 def extract_sources(text):
-    return re.findall(r'(https?://\S+)', text)
+    url_pattern = r'https?://[^\s\]\)"]+'
+    return re.findall(url_pattern, text)
 
-def estimate_confidence(answer):
-    if "I don't know" in answer or "uncertain" in answer:
-        return 0.3
-    return min(0.95, 0.6 + len(answer) / 500)
-
-def run_with_logging(agent, question: str) -> dict:
+# ✅ Run and log, with metadata
+def run_with_logging(agent, question: str, user_id: str = None) -> dict:
     raw_answer = agent.run(question)
+
     sources = extract_sources(raw_answer)
-    confidence = estimate_confidence(raw_answer)
-    log_to_csv(question, raw_answer)
+    confidence = 0.9  # Default confidence if not returned from LLM
+
+    log_to_csv(question, raw_answer)  # Optional
+
     return {
         "answer": raw_answer,
         "sources": sources,
