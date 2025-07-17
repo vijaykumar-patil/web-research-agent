@@ -7,12 +7,19 @@ from history import log_qa, get_all_history, init_db
 st.set_page_config(page_title="Web Research Agent", layout="centered")
 init_db()
 
-# Auth0 login
+# 🔐 Auth0 login
 user_info = login_button(
     client_id=st.secrets["AUTH0_CLIENT_ID"],
     domain=st.secrets["AUTH0_DOMAIN"],
     key="auth0_login"
 )
+
+# ✅ Cache the agent to avoid re-initializing on every rerun
+@st.cache_resource
+def get_agent():
+    return create_agent(verbose=False)
+
+agent = get_agent()
 
 if user_info:
     st.session_state["user"] = user_info
@@ -25,9 +32,8 @@ if user_info:
         st.session_state.clear()
         st.experimental_rerun()
 
-    # Research input
+    # Input
     question = st.text_input("🔍 Enter your research question")
-    agent = create_agent(verbose=False)
 
     if st.button("Get Answer") and question:
         with st.spinner("Thinking..."):
@@ -37,10 +43,11 @@ if user_info:
                 sources = result.get("sources", [])
                 confidence = result.get("confidence", 0.0)
 
-                # Display result
+                # ✅ Display answer
                 st.success("✅ Answer:")
                 st.write(answer)
 
+                # 🔗 Show sources
                 st.markdown("#### 🔗 Sources")
                 if sources:
                     for src in sources:
@@ -48,14 +55,16 @@ if user_info:
                 else:
                     st.info("No sources were detected.")
 
+                # 📊 Show confidence
                 st.markdown(f"#### 📊 Confidence Level: **{confidence * 100:.1f}%**")
 
-                # Store in DB
+                # 🗃️ Store in history
                 log_qa(question, answer, user_id=user_id)
 
             except Exception as e:
                 st.error(f"❌ Error: {e}")
 
+    # 🕘 History
     st.markdown("---")
     st.subheader("📜 Your Past Q&A History")
 
