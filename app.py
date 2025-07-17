@@ -1,4 +1,5 @@
 # app.py
+
 import streamlit as st
 from streamlit_auth0 import login_button
 from agent_core import create_agent
@@ -12,11 +13,12 @@ init_db()
 user_info = login_button(
     client_id=st.secrets["AUTH0_CLIENT_ID"],
     domain=st.secrets["AUTH0_DOMAIN"],
-    redirect_uri=st.secrets["AUTH0_CALLBACK_URL"]
+    redirect_uri=st.secrets["AUTH0_CALLBACK_URL"],
+    key="auth0_login"  # Important to avoid widget key collision
 )
 
-# Store user info in session state
-if user_info:
+# ---------- Session Management ----------
+if user_info and "user" not in st.session_state:
     st.session_state["user"] = user_info
 
 # ---------- Authenticated UI ----------
@@ -27,16 +29,19 @@ if "user" in st.session_state:
     st.title("🌐 Web Research Agent")
     st.markdown(f"👋 Welcome, **{user.get('name', 'User')}**")
 
-    if st.button("🔓 Logout"):
-        st.session_state.clear()
+    # Custom logout button
+    if st.button("🚪 Logout"):
+        for key in st.session_state.keys():
+            del st.session_state[key]
         st.experimental_rerun()
 
     st.write("Ask a question and get researched answers using web + Gemini AI.")
 
+    # Input and agent
     question = st.text_input("🔍 Enter your research question", autocomplete="off")
     agent = create_agent(verbose=False)
 
-    if st.button("Get Answer") and question:
+    if st.button("Get Answer") and question.strip():
         with st.spinner("Thinking..."):
             try:
                 response = agent.run(question)
