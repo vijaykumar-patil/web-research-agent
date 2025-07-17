@@ -1,6 +1,6 @@
 # agent.py
 from agent_core import create_agent
-from history import log_qa, init_db
+from history import init_db, log_qa
 
 def main():
     init_db()
@@ -9,7 +9,7 @@ def main():
     try:
         response = agent.run(question)
         print("\n📌 Answer:\n", response)
-        log_qa(question, response)
+        log_qa(question, response, user_id="local-cli")
     except Exception as e:
         print("❌ Error:", e)
 
