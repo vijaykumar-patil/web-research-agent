@@ -16,7 +16,8 @@ auth0 = Auth0(
     redirect_uri=st.secrets["AUTH0_CALLBACK_URL"]
 )
 
-user_info = auth0.login()
+user_info = auth0.get_user()
+
 
 # ---------- Authenticated UI ----------
 if user_info:
@@ -27,7 +28,7 @@ if user_info:
     st.markdown(f"👋 Welcome, **{user_info.get('name', 'User')}**")
 
     if st.button("🔓 Logout"):
-        auth0.logout()
+        auth0.logout(redirect_uri=st.secrets["AUTH0_CALLBACK_URL"])
         st.session_state.clear()
         st.experimental_rerun()
 
