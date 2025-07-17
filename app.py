@@ -10,7 +10,7 @@ user_info = login_button(
     client_id=st.secrets["AUTH0_CLIENT_ID"],
     domain=st.secrets["AUTH0_DOMAIN"],
     key="auth0_login"
-)
+    )
 st.write("DEBUG — user_info:", user_info)
 
 
