@@ -11,6 +11,8 @@ user_info = login_button(
     domain=st.secrets["AUTH0_DOMAIN"],
     key="auth0_login"
 )
+st.write("DEBUG — user_info:", user_info)
+
 
 if user_info:
     st.session_state["user"] = user_info
