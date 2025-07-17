@@ -52,7 +52,11 @@ def get_all_history(user_id: Optional[str] = None, limit: Optional[int] = None) 
     if limit:
         base += f" LIMIT {int(limit)}"
 
-    cur.execute(base, params)
+    if params:
+        cur.execute(base, params)
+    else:
+        cur.execute(base)
+
     rows = cur.fetchall()
     conn.close()
     return rows
