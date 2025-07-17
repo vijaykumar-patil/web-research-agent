@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit_auth0 import login_button
-from agent_core import create_agent, run_with_logging
+from agent_core import create_agent, create_llm_chain, run_with_logging
 from history import log_qa, get_all_history, init_db
 
 # Page settings
@@ -14,12 +14,14 @@ user_info = login_button(
     key="auth0_login"
 )
 
-# ✅ Cache the agent to avoid re-initializing on every rerun
+# ✅ Cache both models
 @st.cache_resource
 def get_agent():
     return create_agent(verbose=False)
 
-agent = get_agent()
+@st.cache_resource
+def get_fast_model():
+    return create_llm_chain()
 
 if user_info:
     st.session_state["user"] = user_info
@@ -32,13 +34,17 @@ if user_info:
         st.session_state.clear()
         st.experimental_rerun()
 
-    # Input
+    # 🔀 Choose between Fast and Smart mode
+    use_fast = st.toggle("⚡ Use Fast Mode (quicker, less research)", value=True)
+    model = get_fast_model() if use_fast else get_agent()
+
+    # Question input
     question = st.text_input("🔍 Enter your research question")
 
     if st.button("Get Answer") and question:
         with st.spinner("Thinking..."):
             try:
-                result = run_with_logging(agent, question, user_id=user_id)
+                result = run_with_logging(model, question, user_id=user_id, is_fast=use_fast)
                 answer = result.get("answer", "No answer provided.")
                 sources = result.get("sources", [])
                 confidence = result.get("confidence", 0.0)
@@ -55,16 +61,16 @@ if user_info:
                 else:
                     st.info("No sources were detected.")
 
-                # 📊 Show confidence
+                # 📊 Confidence level
                 st.markdown(f"#### 📊 Confidence Level: **{confidence * 100:.1f}%**")
 
-                # 🗃️ Store in history
+                # 🗃️ Save in DB
                 log_qa(question, answer, user_id=user_id)
 
             except Exception as e:
                 st.error(f"❌ Error: {e}")
 
-    # 🕘 History
+    # 🕘 History section
     st.markdown("---")
     st.subheader("📜 Your Past Q&A History")
 
