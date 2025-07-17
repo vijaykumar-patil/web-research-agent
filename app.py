@@ -1,6 +1,26 @@
 # app.py
 import streamlit as st
-from streamlit_auth0.auth0 import Auth0
+from streamlit_auth0 import login_button
+
+user_info = login_button(
+    client_id=st.secrets["AUTH0_CLIENT_ID"],
+    domain=st.secrets["AUTH0_DOMAIN"],
+    client_secret=st.secrets["AUTH0_CLIENT_SECRET"],
+    redirect_uri=st.secrets["AUTH0_CALLBACK_URL"],
+    key="auth0_login"
+)
+
+if user_info:
+    st.write(f"Logged in as {user_info.get('name')}")
+else:
+    st.warning("Please log in to continue.")
+
+
+if user_info:
+    st.write(f"Logged in as {user_info.get('name')}")
+else:
+    st.warning("Please log in to continue.")
+
 from agent_core import create_agent
 from history import log_qa, get_all_history, init_db
 
