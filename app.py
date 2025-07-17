@@ -12,9 +12,9 @@ init_db()
 user_info = login_button(
     client_id=st.secrets["AUTH0_CLIENT_ID"],
     domain=st.secrets["AUTH0_DOMAIN"],
-    redirect_uri=st.secrets["AUTH0_CALLBACK_URL"],  # optional but good to include
     key="auth0_login"
 )
+
 
 # Logged-in UI
 if user_info:
