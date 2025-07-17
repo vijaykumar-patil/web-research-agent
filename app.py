@@ -8,7 +8,6 @@ st.set_page_config(page_title="Web Research Agent", layout="centered")
 user_info = login_button(
     client_id=st.secrets["AUTH0_CLIENT_ID"],
     domain=st.secrets["AUTH0_DOMAIN"],
-    redirect_uri=st.secrets["AUTH0_CALLBACK_URL"],
     key="auth0_login"
 )
 
