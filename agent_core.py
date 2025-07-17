@@ -16,8 +16,8 @@ from history import log_qa  # ✅ Use SQLite logger
 load_dotenv()
 
 # Optional: Reduce Gemini timeout
-import google.generativeai as genai
-genai.configure(timeout=15)  # seconds
+#import google.generativeai as genai
+#genai.configure(timeout=15)  # seconds
 
 # ✅ Extract URLs
 def extract_sources(text):
