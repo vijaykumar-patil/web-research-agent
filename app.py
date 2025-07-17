@@ -1,6 +1,6 @@
 # app.py
 import streamlit as st
-from streamlit_auth0 import Auth0
+from streamlit_auth0.auth0 import Auth0
 from agent_core import create_agent
 from history import log_qa, get_all_history, init_db
 
