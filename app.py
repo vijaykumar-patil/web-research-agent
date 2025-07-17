@@ -1,7 +1,6 @@
 # app.py
-
 import streamlit as st
-from streamlit_auth0 import login_button
+from streamlit_auth0 import Auth0
 from agent_core import create_agent
 from history import log_qa, get_all_history, init_db
 
@@ -9,39 +8,35 @@ from history import log_qa, get_all_history, init_db
 st.set_page_config(page_title="Web Research Agent", layout="centered")
 init_db()
 
-# ---------- Auth0 Login ----------
-user_info = login_button(
-    client_id=st.secrets["AUTH0_CLIENT_ID"],
+# ---------- Auth0 Setup ----------
+auth0 = Auth0(
     domain=st.secrets["AUTH0_DOMAIN"],
-    redirect_uri=st.secrets["AUTH0_CALLBACK_URL"],
-    key="auth0_login"  # Important to avoid widget key collision
+    client_id=st.secrets["AUTH0_CLIENT_ID"],
+    client_secret=st.secrets["AUTH0_CLIENT_SECRET"],
+    redirect_uri=st.secrets["AUTH0_CALLBACK_URL"]
 )
 
-# ---------- Session Management ----------
-if user_info and "user" not in st.session_state:
-    st.session_state["user"] = user_info
+user_info = auth0.login()
 
 # ---------- Authenticated UI ----------
-if "user" in st.session_state:
-    user = st.session_state["user"]
-    user_id = user["sub"]
+if user_info:
+    st.session_state["user"] = user_info
+    user_id = user_info["sub"]
 
     st.title("🌐 Web Research Agent")
-    st.markdown(f"👋 Welcome, **{user.get('name', 'User')}**")
+    st.markdown(f"👋 Welcome, **{user_info.get('name', 'User')}**")
 
-    # Custom logout button
-    if st.button("🚪 Logout"):
-        for key in st.session_state.keys():
-            del st.session_state[key]
+    if st.button("🔓 Logout"):
+        auth0.logout()
+        st.session_state.clear()
         st.experimental_rerun()
 
     st.write("Ask a question and get researched answers using web + Gemini AI.")
 
-    # Input and agent
     question = st.text_input("🔍 Enter your research question", autocomplete="off")
     agent = create_agent(verbose=False)
 
-    if st.button("Get Answer") and question.strip():
+    if st.button("Get Answer") and question:
         with st.spinner("Thinking..."):
             try:
                 response = agent.run(question)
