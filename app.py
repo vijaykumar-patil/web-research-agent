@@ -3,18 +3,18 @@ from streamlit_auth0 import login_button
 from agent_core import create_agent, create_llm_chain, run_with_logging
 from history import log_qa, get_all_history, init_db
 
-# Page settings
+# Set page configuration
 st.set_page_config(page_title="Web Research Agent", layout="centered")
 init_db()
 
-# 🔐 Auth0 login
+# 🔐 User Authentication
 user_info = login_button(
     client_id=st.secrets["AUTH0_CLIENT_ID"],
     domain=st.secrets["AUTH0_DOMAIN"],
     key="auth0_login"
 )
 
-# ✅ Cache both models
+# 🔁 Cache both agents
 @st.cache_resource
 def get_agent():
     return create_agent(verbose=False)
@@ -24,24 +24,26 @@ def get_fast_model():
     return create_llm_chain()
 
 if user_info:
-    st.session_state["user"] = user_info
     user_id = user_info["sub"]
+    user_name = user_info.get("name", "User")
 
     st.title("🌐 Web Research Agent")
-    st.markdown(f"👋 Welcome, **{user_info.get('name', 'User')}**")
+    st.markdown(f"👋 Welcome, **{user_name}**")
 
     if st.button("🔓 Logout"):
         st.session_state.clear()
         st.experimental_rerun()
 
-    # 🔀 Choose between Fast and Smart mode
+    # Mode selector
     use_fast = st.toggle("⚡ Use Fast Mode (quicker, less research)", value=True)
     model = get_fast_model() if use_fast else get_agent()
 
-    # Question input
-    question = st.text_input("🔍 Enter your research question")
+    # 💬 Question input
+    with st.form("qa_form"):
+        question = st.text_input("🔍 Enter your research question", placeholder="e.g., What are the latest EV trends in India?")
+        submitted = st.form_submit_button("Get Answer")
 
-    if st.button("Get Answer") and question:
+    if submitted and question.strip():
         with st.spinner("Thinking..."):
             try:
                 result = run_with_logging(model, question, user_id=user_id, is_fast=use_fast)
@@ -64,13 +66,13 @@ if user_info:
                 # 📊 Confidence level
                 st.markdown(f"#### 📊 Confidence Level: **{confidence * 100:.1f}%**")
 
-                # 🗃️ Save in DB
+                # 🗃️ Save to DB
                 log_qa(question, answer, user_id=user_id)
 
             except Exception as e:
                 st.error(f"❌ Error: {e}")
 
-    # 🕘 History section
+    # 📜 Show user-specific Q&A history
     st.markdown("---")
     st.subheader("📜 Your Past Q&A History")
 
