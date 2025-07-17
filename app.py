@@ -8,7 +8,10 @@ st.title("🌐 Web Research Agent")
 st.write("Ask a question and get researched answers using web + Gemini AI.")
 
 init_db()
-question = st.text_input("🔍 Enter your research question")
+question = st.text_input(
+    "🔍 Enter your research question",
+    autocomplete="off"  # or "off" if you want to disable it
+)
 agent = create_agent(verbose=False)
 
 if st.button("Get Answer") and question:
