@@ -66,9 +66,6 @@ if user_info:
                 # 📊 Confidence level
                 st.markdown(f"#### 📊 Confidence Level: **{confidence * 100:.1f}%**")
 
-                # 🗃️ Save to DB
-                log_qa(question, answer, user_id=user_id)
-
             except Exception as e:
                 st.error(f"❌ Error: {e}")
 
@@ -78,7 +75,7 @@ if user_info:
 
     history = get_all_history(user_id)
     if history:
-        for timestamp, q, a in history:
+        for timestamp, user_id ,q, a in history:
             with st.expander(f"🔎 {q} ({timestamp})"):
                 st.write(a)
     else:

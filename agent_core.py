@@ -66,11 +66,18 @@ def run_with_logging(model, question: str, user_id: str = None, is_fast: bool = 
         else:
             result = model.run(question)
 
-        raw_answer = result if isinstance(result, str) else str(result)
+        # ✅ Only show clean content from Gemini output
+        if hasattr(result, "content"):
+            raw_answer = result.content
+        elif isinstance(result, dict) and "content" in result:
+            raw_answer = result["content"]
+        else:
+            raw_answer = str(result)
+
         sources = extract_sources(raw_answer)
         confidence = 0.95 if is_fast else 0.90
 
-        # ✅ Log into SQLite
+        # ✅ Log to SQLite
         if user_id:
             log_qa(question, raw_answer, user_id)
 
@@ -93,3 +100,4 @@ def run_with_logging(model, question: str, user_id: str = None, is_fast: bool = 
             "sources": [],
             "confidence": 0.0
         }
+
